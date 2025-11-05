@@ -209,6 +209,30 @@
       }
     }
 
+    // Listen for messages from background script (icon clicks)
+    const messageListener = async (message, sender, sendResponse) => {
+      if (message.action === "toggleSearch") {
+        show = !show;
+
+        if (show) {
+          // Use tick() for more reliable focus management
+          await tick();
+          const inputElement = document.getElementById(
+            showConfig ? "open-webui-url-input" : "open-webui-search-input"
+          );
+          if (inputElement) {
+            inputElement.focus();
+          }
+        }
+      }
+    };
+
+    try {
+      chrome.runtime.onMessage.addListener(messageListener);
+    } catch (error) {
+      console.log("Failed to add message listener:", error);
+    }
+
     const down = async (e) => {
       // Reset the configuration when Modifier+Shift+Escape is pressed
       if (show && e.shiftKey && e.key === "Escape" && isModifierKey(e)) {
@@ -356,7 +380,16 @@
     };
 
     document.addEventListener("keydown", down, { capture: true });
-    return () => document.removeEventListener("keydown", down);
+
+    // Cleanup function
+    return () => {
+      document.removeEventListener("keydown", down);
+      try {
+        chrome.runtime.onMessage.removeListener(messageListener);
+      } catch (error) {
+        console.log("Failed to remove message listener:", error);
+      }
+    };
   });
 </script>
 
