@@ -1,3 +1,13 @@
+// Handle extension icon click
+chrome.action.onClicked.addListener(async (tab) => {
+  console.log("Extension icon clicked", tab);
+  try {
+    await chrome.tabs.sendMessage(tab.id, { action: "toggleSearch" });
+  } catch (error) {
+    console.error("Failed to send message to tab:", error);
+  }
+});
+
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   console.log(request, sender);
   const id = sender.tab.id;
